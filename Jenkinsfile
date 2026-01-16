@@ -61,17 +61,8 @@ pipeline {
                     echo "📊 Running code coverage analysis with JaCoCo..."
                 }
                 sh 'mvn jacoco:report'
-            }
-            post {
-                always {
-                    publishHTML target: [
-                        allowMissing: false,
-                        alwaysLinkToLastBuild: true,
-                        keepAll: true,
-                        reportDir: 'target/site/jacoco',
-                        reportFiles: 'index.html',
-                        reportName: 'JaCoCo Code Coverage Report'
-                    ]
+                script {
+                    echo "✅ Coverage report generated in target/site/jacoco/index.html"
                 }
             }
         }
