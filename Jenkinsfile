@@ -11,6 +11,10 @@ pipeline {
         buildDiscarder(logRotator(numToKeepStr: '10'))
     }
     
+    triggers {
+        pollSCM('H/5 * * * *')  // Poll GitHub every 5 minutes
+    }
+    
     environment {
         APP_NAME = 'taskify-backend'
         DOCKER_REGISTRY = 'docker.io'
