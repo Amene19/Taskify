@@ -5,6 +5,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import static org.mockito.Mockito.when;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -45,6 +46,18 @@ class AuthControllerTest {
     @MockBean
     private JwtFilter jwtFilter;
 
+    @Value("${test.user.email}")
+    private String testEmail;
+
+    @Value("${test.user.password}")
+    private String testPassword;
+
+    @Value("${test.user.new.email}")
+    private String newUserEmail;
+
+    @Value("${test.user.existing.email}")
+    private String existingUserEmail;
+
     private User testUser;
 
     @SuppressWarnings("unused")
@@ -53,7 +66,7 @@ class AuthControllerTest {
         // Arrange: Préparer les données de test
         testUser = new User();
         testUser.setId(1L);
-        testUser.setEmail("test@example.com");
+        testUser.setEmail(testEmail);
         testUser.setPassword("encodedPassword");
     }
 
@@ -63,15 +76,15 @@ class AuthControllerTest {
     @DisplayName("POST /api/auth/register - Doit créer un utilisateur avec succès")
     void register_ShouldCreateUser_WhenValidInput() throws Exception {
         // Arrange
-        when(userService.register("newuser@example.com", "password123")).thenReturn(testUser);
-        when(jwtUtil.generateToken("test@example.com")).thenReturn("jwt-token-123");
+        when(userService.register(newUserEmail, testPassword)).thenReturn(testUser);
+        when(jwtUtil.generateToken(testEmail)).thenReturn("jwt-token-123");
 
-        String requestBody = """
+        String requestBody = String.format("""
             {
-                "email": "newuser@example.com",
-                "password": "password123"
+                "email": "%s",
+                "password": "%s"
             }
-            """;
+            """, newUserEmail, testPassword);
 
         // Act & Assert
         mockMvc.perform(post("/api/auth/register")
@@ -79,7 +92,7 @@ class AuthControllerTest {
                 .content(requestBody))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.token").value("jwt-token-123"))
-                .andExpect(jsonPath("$.email").value("test@example.com"))
+                .andExpect(jsonPath("$.email").value(testEmail))
                 .andExpect(jsonPath("$.message").value("Registration successful"));
     }
 
@@ -87,15 +100,15 @@ class AuthControllerTest {
     @DisplayName("POST /api/auth/register - Doit retourner 400 si l'email existe déjà")
     void register_ShouldReturn400_WhenEmailAlreadyExists() throws Exception {
         // Arrange
-        when(userService.register("existing@example.com", "password123"))
+        when(userService.register(existingUserEmail, testPassword))
             .thenThrow(new RuntimeException("Email already exists"));
 
-        String requestBody = """
+        String requestBody = String.format("""
             {
-                "email": "existing@example.com",
-                "password": "password123"
+                "email": "%s",
+                "password": "%s"
             }
-            """;
+            """, existingUserEmail, testPassword);
 
         // Act & Assert
         mockMvc.perform(post("/api/auth/register")
@@ -127,11 +140,11 @@ class AuthControllerTest {
     @DisplayName("POST /api/auth/register - Doit retourner 400 si le mot de passe est manquant")
     void register_ShouldReturn400_WhenPasswordIsMissing() throws Exception {
         // Arrange
-        String requestBody = """
+        String requestBody = String.format("""
             {
-                "email": "test@example.com"
+                "email": "%s"
             }
-            """;
+            """, testEmail);
 
         // Act & Assert
         mockMvc.perform(post("/api/auth/register")
@@ -146,15 +159,15 @@ class AuthControllerTest {
     @DisplayName("POST /api/auth/login - Doit authentifier l'utilisateur avec succès")
     void login_ShouldAuthenticateUser_WhenValidCredentials() throws Exception {
         // Arrange
-        when(userService.authenticate("test@example.com", "password123")).thenReturn(testUser);
-        when(jwtUtil.generateToken("test@example.com")).thenReturn("jwt-token-456");
+        when(userService.authenticate(testEmail, testPassword)).thenReturn(testUser);
+        when(jwtUtil.generateToken(testEmail)).thenReturn("jwt-token-456");
 
-        String requestBody = """
+        String requestBody = String.format("""
             {
-                "email": "test@example.com",
-                "password": "password123"
+                "email": "%s",
+                "password": "%s"
             }
-            """;
+            """, testEmail, testPassword);
 
         // Act & Assert
         mockMvc.perform(post("/api/auth/login")
@@ -162,7 +175,7 @@ class AuthControllerTest {
                 .content(requestBody))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").value("jwt-token-456"))
-                .andExpect(jsonPath("$.email").value("test@example.com"))
+                .andExpect(jsonPath("$.email").value(testEmail))
                 .andExpect(jsonPath("$.message").value("Login successful"));
     }
 
@@ -170,15 +183,15 @@ class AuthControllerTest {
     @DisplayName("POST /api/auth/login - Doit retourner 401 si les identifiants sont invalides")
     void login_ShouldReturn401_WhenInvalidCredentials() throws Exception {
         // Arrange
-        when(userService.authenticate("test@example.com", "wrongpassword"))
+        when(userService.authenticate(testEmail, "wrongpassword"))
             .thenThrow(new RuntimeException("Invalid email or password"));
 
-        String requestBody = """
+        String requestBody = String.format("""
             {
-                "email": "test@example.com",
+                "email": "%s",
                 "password": "wrongpassword"
             }
-            """;
+            """, testEmail);
 
         // Act & Assert
         mockMvc.perform(post("/api/auth/login")
@@ -192,11 +205,11 @@ class AuthControllerTest {
     @DisplayName("POST /api/auth/login - Doit retourner 400 si l'email est manquant")
     void login_ShouldReturn400_WhenEmailIsMissing() throws Exception {
         // Arrange
-        String requestBody = """
+        String requestBody = String.format("""
             {
-                "password": "password123"
+                "password": "%s"
             }
-            """;
+            """, testPassword);
 
         // Act & Assert
         mockMvc.perform(post("/api/auth/login")

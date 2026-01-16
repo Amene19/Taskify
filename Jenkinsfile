@@ -12,7 +12,7 @@ pipeline {
     }
     
     triggers {
-        pollSCM('H/5 * * * *')  // Poll GitHub every 5 minutes (webhooks don't work with localhost)
+        githubPush()  // Trigger on GitHub webhook push events
     }
     
     environment {
@@ -174,6 +174,4 @@ pipeline {
         }
     }
 }
-//test if the pipeline works on push2
-//test if the pipeline works on push2
-//github-webhook
+
