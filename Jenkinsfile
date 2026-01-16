@@ -174,3 +174,4 @@ pipeline {
         }
     }
 }
+//test if the pipeline works on push
