@@ -21,6 +21,27 @@ pipeline {
         DOCKER_IMAGE_NAME = "${DOCKER_REGISTRY}/${DOCKER_USERNAME}/${APP_NAME}"
         SONAR_PROJECT_KEY = 'taskify-backend'
         SLACK_CHANNEL = '#builds'
+        
+        // Application Configuration (from Jenkins credentials)
+        SPRING_APPLICATION_NAME = 'taskify-backend'
+        SERVER_PORT = '8080'
+        
+        // Database Configuration
+        SPRING_DATASOURCE_URL = 'jdbc:h2:mem:testdb'
+        SPRING_DATASOURCE_USERNAME = 'sa'
+        SPRING_DATASOURCE_PASSWORD = ''
+        
+        // JWT Configuration (loaded from Jenkins credentials)
+        JWT_SECRET = credentials('JWT_SECRET')
+        JWT_EXPIRATION = '86400000'
+        
+        // Test Environment Variables
+        TEST_JWT_SECRET = credentials('TEST_JWT_SECRET')
+        TEST_JWT_EXPIRATION = '3600000'
+        TEST_USER_EMAIL = 'test@example.com'
+        TEST_USER_PASSWORD = 'password123'
+        TEST_USER_NEW_EMAIL = 'newuser@example.com'
+        TEST_USER_EXISTING_EMAIL = 'existing@example.com'
     }
     
     stages {
@@ -30,6 +51,29 @@ pipeline {
                     echo "📦 Checking out source code from SCM..."
                 }
                 checkout scm
+                script {
+                    echo "🔧 Loading .env file from Jenkins workspace..."
+                    // Copy .env from Jenkins secure location (if stored on server)
+                    // sh 'cp /var/jenkins_home/.env.taskify .env'
+                    
+                    // Or create .env from Jenkins credentials
+                    sh '''
+                        echo "SPRING_APPLICATION_NAME=${SPRING_APPLICATION_NAME}" > .env
+                        echo "SERVER_PORT=${SERVER_PORT}" >> .env
+                        echo "SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}" >> .env
+                        echo "SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}" >> .env
+                        echo "SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}" >> .env
+                        echo "JWT_SECRET=${JWT_SECRET}" >> .env
+                        echo "JWT_EXPIRATION=${JWT_EXPIRATION}" >> .env
+                        echo "TEST_JWT_SECRET=${TEST_JWT_SECRET}" >> .env
+                        echo "TEST_JWT_EXPIRATION=${TEST_JWT_EXPIRATION}" >> .env
+                        echo "TEST_USER_EMAIL=${TEST_USER_EMAIL}" >> .env
+                        echo "TEST_USER_PASSWORD=${TEST_USER_PASSWORD}" >> .env
+                        echo "TEST_USER_NEW_EMAIL=${TEST_USER_NEW_EMAIL}" >> .env
+                        echo "TEST_USER_EXISTING_EMAIL=${TEST_USER_EXISTING_EMAIL}" >> .env
+                    '''
+                    echo "✅ .env file created for build"
+                }
             }
         }
         
