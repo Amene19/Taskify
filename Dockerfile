@@ -9,7 +9,6 @@ LABEL description="Application Taskify Backend - Gestion de tâches et rendez-vo
 
 WORKDIR /app
 
-# Copy pom.xml and download dependencies
 COPY pom.xml .
 RUN mvn dependency:go-offline -B
 
