@@ -150,7 +150,7 @@ pipeline {
 
         stage('SonarQube Analysis') {
             when {
-                branch 'main'
+                branch 'master'
             }
             steps {
                 script {
@@ -235,7 +235,7 @@ pipeline {
             when {
                 allOf {
                     environment name: 'DOCKER_AVAILABLE', value: 'true'
-                    branch 'main'
+                    branch 'master'
                 }
             }
             steps {
