@@ -153,10 +153,9 @@ pipeline {
             steps {
                 script {
                     echo "🐳 Building Docker image..."
-                    // Commented for security - uncomment when Docker credentials are set up
-                    // docker.build("${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}")
-                    // docker.build("${DOCKER_IMAGE_NAME}:latest")
-                    echo "ℹ️ Docker build stage (commented out - configure Docker credentials first)"
+                    sh "docker build -t ${APP_NAME}:${BUILD_NUMBER} ."
+                    sh "docker tag ${APP_NAME}:${BUILD_NUMBER} ${APP_NAME}:latest"
+                    echo "✅ Docker image built: ${APP_NAME}:${BUILD_NUMBER}"
                 }
             }
         }
@@ -168,10 +167,18 @@ pipeline {
             steps {
                 script {
                     echo "📤 Pushing Docker image to registry..."
-                    // Commented for security - uncomment when Docker Hub credentials are configured
-                    // docker.image("${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}").push()
-                    // docker.image("${DOCKER_IMAGE_NAME}:latest").push()
-                    echo "ℹ️ Push stage (commented out - configure Docker credentials first)"
+                    withCredentials([usernamePassword(
+                        credentialsId: 'dockerhub-credentials',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )]) {
+                        sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                        sh "docker tag ${APP_NAME}:${BUILD_NUMBER} ${DOCKER_USER}/${APP_NAME}:${BUILD_NUMBER}"
+                        sh "docker tag ${APP_NAME}:latest ${DOCKER_USER}/${APP_NAME}:latest"
+                        sh "docker push ${DOCKER_USER}/${APP_NAME}:${BUILD_NUMBER}"
+                        sh "docker push ${DOCKER_USER}/${APP_NAME}:latest"
+                        echo "✅ Docker images pushed to Docker Hub"
+                    }
                 }
             }
         }
