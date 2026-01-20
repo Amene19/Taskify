@@ -173,7 +173,7 @@ public class AppointmentController {
         }
     }
 
-    // ==================== DTOs ====================
+    // ==================== DTOs ====================================
 
     public static class AppointmentRequest {
         @NotBlank(message = "Subject is required")
