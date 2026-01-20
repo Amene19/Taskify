@@ -15,7 +15,7 @@ RUN mvn dependency:go-offline -B
 
 COPY src ./src
 
-# Build the application
+
 RUN mvn clean package -DskipTests
 
 # Étape 2 : Runtime
