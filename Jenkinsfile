@@ -148,8 +148,35 @@ pipeline {
                 }
             }
         }
+
+        stage('Docker Preflight') {
+            steps {
+                script {
+                    echo "🔎 Checking Docker availability..."
+                    def hasSock = fileExists('/var/run/docker.sock')
+                    def hasDocker = (sh(script: 'command -v docker >/dev/null 2>&1', returnStatus: true) == 0)
+                    if (!hasDocker) {
+                        echo "⚠️ Docker CLI not found in Jenkins agent."
+                    }
+                    if (!hasSock) {
+                        echo "⚠️ Docker socket not mounted at /var/run/docker.sock."
+                    }
+                    if (hasDocker && hasSock) {
+                        sh 'docker version'
+                        echo "✅ Docker is available; enabling Docker stages."
+                        env.DOCKER_AVAILABLE = 'true'
+                    } else {
+                        echo "ℹ️ To enable Docker build/push stages: mount the host socket (-v /var/run/docker.sock:/var/run/docker.sock) and install Docker CLI inside Jenkins."
+                        env.DOCKER_AVAILABLE = 'false'
+                    }
+                }
+            }
+        }
         
         stage('Build Docker Image') {
+            when {
+                environment name: 'DOCKER_AVAILABLE', value: 'true'
+            }
             steps {
                 script {
                     echo "🐳 Building Docker image..."
@@ -162,6 +189,7 @@ pipeline {
         
         stage('Push to Registry') {
             when {
+                environment name: 'DOCKER_AVAILABLE', value: 'true'
                 branch 'main'
             }
             steps {
