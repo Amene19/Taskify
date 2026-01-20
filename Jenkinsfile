@@ -13,6 +13,8 @@ pipeline {
     
     triggers {
         githubPush()  // Trigger on GitHub webhook push events
+        // Fallback polling to keep builds running even if webhook breaks
+        pollSCM('H/2 * * * *')
     }
     
     environment {
