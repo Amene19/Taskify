@@ -5,13 +5,13 @@ pipeline {
         stage('Build & Test') {
             steps {
                 echo 'Building and testing the project...'
-                bat 'mvn clean install'
+                sh 'mvn clean install'
             }
         }
         stage('Docker Build') {
             steps {
                 echo 'Building Docker image...'
-                bat 'docker build -t taskify-backend:latest .'
+                sh 'docker build -t taskify-backend:latest .'
             }
         }
     }
